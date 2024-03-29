@@ -1,41 +1,17 @@
-// Function to increase the score
-function increaseScore() {
-    
-    console.log("Score increased!");
-}
 
 class Spaceship {
     constructor() {
         this.element = document.getElementById('spaceship');
         this.x = 375; // Initial position
-        this.y = 580; // Initial position
+        this.y = 550; // Initial position
         this.width = 50;
         this.height = 50;
-        this.speed = 30;
+        this.speed = 20; // Increased speed for faster movement
+        this.lives = 3; // Adding lives property
         this.projectiles = [];
-    }
-
-    // Function to check collision between spaceship's projectiles and enemies
-    checkProjectileCollision() {
-        const projectiles = this.projectiles;
-        const enemies = document.getElementsByClassName('enemy');
-        for (let i = 0; i < projectiles.length; i++) {
-            const projectile = projectiles[i];
-            const projectileRect = projectile.getBoundingClientRect();
-            for (let j = 0; j < enemies.length; j++) {
-                const enemy = enemies[j];
-                const enemyRect = enemy.getBoundingClientRect();
-                if (projectileRect.top < enemyRect.bottom &&
-                    projectileRect.bottom > enemyRect.top &&
-                    projectileRect.left < enemyRect.right &&
-                    projectileRect.right > enemyRect.left) {
-                    // Collision detected
-                    projectile.remove();
-                    enemy.remove();
-                    increaseScore(); // Call increaseScore function
-                }
-            }
-        }
+        this.moveLeft = this.moveLeft.bind(this);
+        this.moveRight = this.moveRight.bind(this);
+        this.shoot = this.shoot.bind(this);
     }
 
     moveLeft() {
@@ -59,6 +35,22 @@ class Spaceship {
         projectile.style.top = (this.y - 10) + 'px';
         document.getElementById('game-container').appendChild(projectile);
         this.projectiles.push(projectile);
+        this.moveProjectiles(); // Move projectiles immediately after shooting
+        
+    }
+
+    // Function to handle when spaceship gets hit by an enemy
+    getHit() {
+        this.lives--;
+        if (this.lives === 0) {
+            this.gameOver();
+        }
+    }
+
+    // Function to handle game over
+    gameOver() {
+        this.element.style.display = 'none'; // Hide the spaceship
+        alert("Game Over! You lost.");
     }
 }
 
@@ -92,13 +84,13 @@ class Game {
     constructor() {
         this.spaceship = new Spaceship();
         this.enemies = [];
-        this.score = 0;
         this.gameOver = false;
     }
 
     start() {
         this.gameLoop();
         this.enemyGenerator();
+        this.setupControls();
     }
 
     enemyGenerator() {
@@ -113,38 +105,64 @@ class Game {
     checkCollisions() {
         const projectiles = this.spaceship.projectiles;
         const enemies = document.getElementsByClassName('enemy');
+
+        // Move projectiles and check for collision with enemies
         for (let i = 0; i < projectiles.length; i++) {
             const projectile = projectiles[i];
             const projectileRect = projectile.getBoundingClientRect();
+            projectile.style.top = projectile.offsetTop - 5 + 'px'; // Move the projectile upwards
+
+            // Check collision with each enemy
             for (let j = 0; j < enemies.length; j++) {
                 const enemy = enemies[j];
                 const enemyRect = enemy.getBoundingClientRect();
+
+                // Check if projectile and enemy overlap
                 if (projectileRect.top < enemyRect.bottom &&
                     projectileRect.bottom > enemyRect.top &&
                     projectileRect.left < enemyRect.right &&
                     projectileRect.right > enemyRect.left) {
+
                     // Collision detected
                     projectile.remove();
                     enemy.remove();
-                    increaseScore(); // Call increaseScore function
+                    this.enemies.splice(j, 1); // Remove enemy from array
+                    this.score += 10; // Increase score for each enemy destroyed
+                }
+            }
+
+            // Remove projectile if it goes off-screen
+            if (projectileRect.bottom < 0) {
+                projectile.remove();
+                this.spaceship.projectiles.splice(i, 1);
+                i--; // Decrement i to account for removed projectile
+            }
+        }
+
+        // Check collision between spaceship and enemies
+        const spaceshipRect = this.spaceship.element.getBoundingClientRect();
+        for (let i = 0; i < enemies.length; i++) {
+            const enemy = enemies[i];
+            const enemyRect = enemy.getBoundingClientRect();
+
+            // Check if enemy collides with spaceship
+            if (enemyRect.top < spaceshipRect.bottom &&
+                enemyRect.bottom > spaceshipRect.top &&
+                enemyRect.left < spaceshipRect.right &&
+                enemyRect.right > spaceshipRect.left) {
+                // Collision detected
+                enemy.remove();
+                this.spaceship.getHit(); // Reduce spaceship lives
+                if (this.spaceship.lives === 0) {
+                    this.gameOver = true;
+                    this.spaceship.gameOver();
                 }
             }
         }
     }
 
-    checkGameStatus() {
-        if (this.enemies.some(enemy => enemy.y + enemy.height > this.spaceship.y)) {
-            this.gameOver = true;
-            alert("Game Over! You lost.");
-            // You can add further actions for game over, like resetting the game.
-        }
-    }
-
     gameLoop() {
-        this.spaceship.checkProjectileCollision();
         this.checkCollisions();
-        this.checkGameStatus();
-        this.moveProjectiles();
         this.moveEnemies();
         if (!this.gameOver) {
             requestAnimationFrame(() => this.gameLoop());
@@ -167,25 +185,43 @@ class Game {
             const currentTop = parseInt(projectile.style.top);
             if (currentTop < 0) {
                 projectile.remove();
-                this.spaceship.projectiles.splice(i, 1);
-                i--; // Decrement i to account for removed projectile
-            } else {
-                projectile.style.top = currentTop - 5 + 'px';
+                this
             }
+        }
+    }
+
+    moveProjectiles() {
+    const projectiles = this.spaceship.projectiles;
+    for (let i = 0; i < projectiles.length; i++) {
+        const projectile = projectiles[i];
+        const currentTop = parseInt(projectile.style.top);
+        if (currentTop > 0) {
+            projectile.style.top = currentTop - 10 + 'px'; // Adjust projectile speed
+        } else {
+            projectile.remove();
+            this.spaceship.projectiles.splice(i, 1);
+            i--; // Decrement i to account for removed projectile
         }
     }
 }
 
+    setupControls() {
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft') {
+                this.spaceship.moveLeft();
+            } else if (e.key === 'ArrowRight') {
+                this.spaceship.moveRight();
+            } else if (e.code === 'Space') {
+                this.spaceship.shoot();
+                this.moveProjectiles(); // Call moveProjectiles when shooting
+            }
+        });
+    }
+}
+
+
+
+
+
 const game = new Game();
 game.start();
-
-// Keyboard controls
-document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft') {
-        game.spaceship.moveLeft();
-    } else if (e.key === 'ArrowRight') {
-        game.spaceship.moveRight();
-    } else if (e.code === 'Space') {
-        game.spaceship.shoot();
-    }
-});
