@@ -85,6 +85,7 @@ class Game {
         this.spaceship = new Spaceship();
         this.enemies = [];
         this.gameOver = false;
+        this.score = 0;
     }
 
     start() {
@@ -196,7 +197,7 @@ class Game {
         const projectile = projectiles[i];
         const currentTop = parseInt(projectile.style.top);
         if (currentTop > 0) {
-            projectile.style.top = currentTop - 10 + 'px'; // Adjust projectile speed
+            projectile.style.top = currentTop - 10 + 'px'; // projectile speed goes according to choice
         } else {
             projectile.remove();
             this.spaceship.projectiles.splice(i, 1);
@@ -213,7 +214,7 @@ class Game {
                 this.spaceship.moveRight();
             } else if (e.code === 'Space') {
                 this.spaceship.shoot();
-                this.moveProjectiles(); // Call moveProjectiles when shooting
+                this.moveProjectiles(); // moveProjectiles when shooting
             }
         });
     }

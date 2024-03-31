@@ -18,8 +18,11 @@ body, html {
 .enemy {
     position: absolute;
     width: 30px;
-    height: 30px;
-    background-color: red;
+    height: 50px;
+    background-image: url('./Images/monster2.jpg');
+    background-size: cover; 
+    background-repeat: no-repeat; 
+    background-position: center;
 }
 
 #spaceship {
