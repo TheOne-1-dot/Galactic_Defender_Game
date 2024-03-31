@@ -1,4 +1,3 @@
-
 class Spaceship {
     constructor() {
         this.element = document.getElementById('spaceship');
@@ -12,6 +11,7 @@ class Spaceship {
         this.moveLeft = this.moveLeft.bind(this);
         this.moveRight = this.moveRight.bind(this);
         this.shoot = this.shoot.bind(this);
+        this.moveProjectiles = this.moveProjectiles.bind(this); // Bind moveProjectiles method
     }
 
     moveLeft() {
@@ -52,6 +52,22 @@ class Spaceship {
         this.element.style.display = 'none'; // Hide the spaceship
         alert("Game Over! You lost.");
     }
+
+    // Function to move projectiles
+    moveProjectiles() {
+        const projectiles = this.projectiles;
+        for (let i = 0; i < projectiles.length; i++) {
+            const projectile = projectiles[i];
+            const currentTop = parseInt(projectile.style.top);
+            if (currentTop > 0) {
+                projectile.style.top = currentTop - 10 + 'px'; // projectile speed goes according to choice
+            } else {
+                projectile.remove();
+                this.projectiles.splice(i, 1);
+                i--; // Decrement i to account for removed projectile
+            }
+        }
+    }
 }
 
 class Enemy {
@@ -86,6 +102,17 @@ class Game {
         this.enemies = [];
         this.gameOver = false;
         this.score = 0;
+        this.updateScoreDisplay();
+    }
+
+    updateScoreDisplay() {
+        const scoreElement = document.getElementById('score');
+        scoreElement.textContent = 'Score: ' + this.score;
+    }
+
+    destroyEnemy() {
+        this.score += 10; // Increment score when an enemy is destroyed
+        this.updateScoreDisplay(); // Update score display
     }
 
     start() {
@@ -128,7 +155,7 @@ class Game {
                     projectile.remove();
                     enemy.remove();
                     this.enemies.splice(j, 1); // Remove enemy from array
-                    this.score += 10; // Increase score for each enemy destroyed
+                    this.destroyEnemy(); // Increase score for each enemy destroyed
                 }
             }
 
@@ -186,25 +213,11 @@ class Game {
             const currentTop = parseInt(projectile.style.top);
             if (currentTop < 0) {
                 projectile.remove();
-                this
+                this.spaceship.projectiles.splice(i, 1);
+                i--; // Decrement i to account for removed projectile
             }
         }
     }
-
-    moveProjectiles() {
-    const projectiles = this.spaceship.projectiles;
-    for (let i = 0; i < projectiles.length; i++) {
-        const projectile = projectiles[i];
-        const currentTop = parseInt(projectile.style.top);
-        if (currentTop > 0) {
-            projectile.style.top = currentTop - 10 + 'px'; // projectile speed goes according to choice
-        } else {
-            projectile.remove();
-            this.spaceship.projectiles.splice(i, 1);
-            i--; // Decrement i to account for removed projectile
-        }
-    }
-}
 
     setupControls() {
         document.addEventListener('keydown', e => {
@@ -219,10 +232,6 @@ class Game {
         });
     }
 }
-
-
-
-
 
 const game = new Game();
 game.start();
